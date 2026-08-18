@@ -1,61 +1,105 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Header } from './components/Header';
-import { SearchForm } from './components/SearchForm';
+import { SearchBar } from './components/SearchBar';
 import { VibeSummaryCard } from './components/VibeSummaryCard';
-import { VibeCharts } from './components/VibeCharts';
+import { SentimentDonutChart } from './components/SentimentDonutChart';
+import { StatCards } from './components/StatCards';
 import { PostList } from './components/PostList';
-import { SkeletonLoader } from './components/SkeletonLoader';
-import { ErrorMessage } from './components/ErrorMessage';
-import { fetchSubredditHotPosts } from './services/redditApi';
-import { analyzeSubredditVibe } from './utils/sentiment';
-import { Sparkles, MessageCircle, ArrowUpRight, Heart, ShieldAlert } from 'lucide-react';
+import { LoadingState } from './components/LoadingState';
+import { ErrorState } from './components/ErrorState';
+import { EmptyState } from './components/EmptyState';
+import { fetchHotPosts } from './api/reddit';
+import { analyzeTitles } from './utils/sentiment';
+import { computeVibe } from './utils/aggregate';
+import { Sparkles, Radio, Activity, Heart, ArrowUpRight } from 'lucide-react';
 
 export function App() {
-  const [currentSubreddit, setCurrentSubreddit] = useState('reactjs');
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState(null);
-  const [subredditData, setSubredditData] = useState(null);
-  const [vibeData, setVibeData] = useState(null);
+  // State management as specified
+  const [subreddit, setSubreddit] = useState('reactjs');
+  const [status, setStatus] = useState('idle'); // 'idle' | 'loading' | 'success' | 'error'
+  const [posts, setPosts] = useState([]);
+  const [vibeSummary, setVibeSummary] = useState(null);
+  const [errorMessage, setErrorMessage] = useState(null);
 
-  const handleFetchVibe = useCallback(async (subredditName) => {
-    if (!subredditName) return;
+  const handleSearch = useCallback(async (targetSubreddit) => {
+    if (!targetSubreddit) return;
 
-    setIsLoading(true);
-    setError(null);
-    setCurrentSubreddit(subredditName);
+    setSubreddit(targetSubreddit);
+    setStatus('loading');
+    setErrorMessage(null);
 
     try {
-      const data = await fetchSubredditHotPosts(subredditName, 50);
-      const analyzed = analyzeSubredditVibe(data.posts);
+      // 1. Fetch raw posts from api/reddit.js
+      const rawPosts = await fetchHotPosts(targetSubreddit);
 
-      setSubredditData(data);
-      setVibeData(analyzed);
+      // 2. Enrich posts with sentiment scores via utils/sentiment.js
+      const analyzedPosts = analyzeTitles(rawPosts);
+
+      // 3. Compute aggregate statistics via utils/aggregate.js
+      const summary = computeVibe(analyzedPosts);
+
+      setPosts(analyzedPosts);
+      setVibeSummary(summary);
+      setStatus('success');
     } catch (err) {
-      setError(err.message || 'Failed to analyze subreddit vibe.');
-      setSubredditData(null);
-      setVibeData(null);
-    } finally {
-      setIsLoading(false);
+      setErrorMessage(err.message || "Couldn't reach Reddit right now, try again in a moment.");
+      setPosts([]);
+      setVibeSummary(null);
+      setStatus('error');
     }
   }, []);
 
-  // Fetch initial default subreddit on mount
+  // Automatically fetch default subreddit on initial load
   useEffect(() => {
-    handleFetchVibe('reactjs');
-  }, [handleFetchVibe]);
+    handleSearch('reactjs');
+  }, [handleSearch]);
 
   return (
     <div className="min-h-screen flex flex-col bg-[#030712] text-slate-100 selection:bg-indigo-500 selection:text-white">
-      {/* Header */}
-      <Header />
+      {/* Top Navigation Bar */}
+      <header className="border-b border-slate-800/80 bg-slate-950/80 backdrop-blur-md sticky top-0 z-50">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3.5 flex items-center justify-between">
+          <div className="flex items-center space-x-3">
+            <div className="relative">
+              <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-indigo-500 via-purple-500 to-pink-500 flex items-center justify-center shadow-lg shadow-indigo-500/25">
+                <Sparkles className="w-5 h-5 text-white" />
+              </div>
+              <span className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-emerald-500 border-2 border-slate-950 rounded-full" />
+            </div>
+            <div>
+              <div className="flex items-center space-x-2">
+                <h1 className="text-lg font-bold text-white tracking-tight font-display">
+                  Subreddit Vibe Check
+                </h1>
+                <span className="px-2 py-0.5 text-[10px] font-semibold bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 rounded-full uppercase tracking-wider">
+                  Live Analysis
+                </span>
+              </div>
+              <p className="text-xs text-slate-400">
+                Client-side sentiment scoring for public subreddits
+              </p>
+            </div>
+          </div>
 
-      {/* Main Container */}
+          <div className="hidden sm:flex items-center space-x-4">
+            <div className="flex items-center space-x-2 text-xs text-slate-400 bg-slate-900/80 border border-slate-800 px-3 py-1.5 rounded-full">
+              <Radio className="w-3.5 h-3.5 text-emerald-400 animate-pulse" />
+              <span>api.reddit.com JSON API</span>
+            </div>
+            <div className="flex items-center space-x-2 text-xs text-slate-400 bg-slate-900/80 border border-slate-800 px-3 py-1.5 rounded-full">
+              <Activity className="w-3.5 h-3.5 text-indigo-400" />
+              <span>AFINN-165 Sentiment Engine</span>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      {/* Main Content Area */}
       <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-10">
         {/* Search Hero Section */}
-        <section className="text-center space-y-6 pt-4 sm:pt-6">
+        <section className="text-center space-y-6 pt-2 sm:pt-4">
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 text-xs font-semibold">
             <Sparkles className="w-3.5 h-3.5" />
-            <span>Instant Reddit Sentiment Scoring</span>
+            <span>Instant Client-Side Scoring</span>
           </div>
 
           <h2 className="text-3xl sm:text-5xl font-extrabold text-white tracking-tight max-w-3xl mx-auto font-display leading-tight">
@@ -63,113 +107,120 @@ export function App() {
           </h2>
 
           <p className="text-sm sm:text-base text-slate-400 max-w-xl mx-auto">
-            Scans the top 50 hot posts in real-time and runs AFINN sentiment analysis on post titles to detect positivity, drama, and community mood.
+            Scans hot post titles in real-time and runs sentiment analysis directly in your browser with zero server latency.
           </p>
 
-          <SearchForm
-            onSearch={handleFetchVibe}
-            isLoading={isLoading}
-            initialValue={currentSubreddit}
+          <SearchBar
+            onSearch={handleSearch}
+            isLoading={status === 'loading'}
+            initialValue={subreddit}
           />
         </section>
 
-        {/* Dashboard Content Body */}
-        {isLoading ? (
-          <SkeletonLoader />
-        ) : error ? (
-          <ErrorMessage
-            error={error}
-            onRetry={() => handleFetchVibe(currentSubreddit)}
-            onSelectPreset={handleFetchVibe}
+        {/* View Switching based on State */}
+        {status === 'loading' && <LoadingState />}
+
+        {status === 'error' && (
+          <ErrorState
+            errorMessage={errorMessage}
+            onRetry={() => handleSearch(subreddit)}
+            onSelectPreset={handleSearch}
           />
-        ) : vibeData && subredditData ? (
-          <section className="space-y-10 animate-fade-in">
-            {/* Visual Centerpiece: Summary Card */}
+        )}
+
+        {status === 'idle' && <EmptyState onSelectPreset={handleSearch} />}
+
+        {status === 'success' && vibeSummary && (
+          <section className="space-y-8 animate-fade-in">
+            {/* 1. Hero Vibe Summary Card */}
             <VibeSummaryCard
-              subredditData={subredditData}
-              vibeData={vibeData}
+              subreddit={subreddit}
+              vibeSummary={vibeSummary}
             />
 
-            {/* Recharts Analytics Section */}
+            {/* 2. Recharts Donut & Info Grid */}
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-              <div className="lg:col-span-2">
-                <VibeCharts vibeData={vibeData} />
+              {/* Donut Chart */}
+              <div className="lg:col-span-1">
+                <SentimentDonutChart counts={vibeSummary.counts} />
               </div>
 
-              {/* Quick Info & Insight Box */}
-              <div className="glass-panel rounded-3xl p-6 border shadow-xl flex flex-col justify-between space-y-4">
+              {/* Explainer / Methodology Box */}
+              <div className="lg:col-span-2 glass-panel rounded-3xl p-6 border shadow-xl flex flex-col justify-between space-y-4">
                 <div>
                   <h3 className="text-base font-bold text-white font-display mb-1 flex items-center gap-2">
                     <Heart className="w-4 h-4 text-pink-400" />
-                    How Vibe Check Works
+                    How Vibe Analysis Works
                   </h3>
                   <p className="text-xs text-slate-400 leading-relaxed">
-                    Titles are evaluated using AFINN-165, assigning positive values to encouraging words (e.g. <em>win, awesome, launch</em>) and negative values to complaints or outrage words (e.g. <em>bug, broken, toxic</em>).
+                    Each post title is evaluated using the AFINN-165 sentiment lexicon. Positive words (e.g. <em>win, launch, exciting</em>) increment the score, while negative words (e.g. <em>bug, broken, outrage</em>) decrement it. The overall label is calculated from average post sentiment across the feed.
                   </p>
                 </div>
 
-                <div className="space-y-2 bg-slate-900/80 p-3.5 rounded-2xl border border-slate-800 text-xs">
-                  <div className="flex justify-between font-mono">
-                    <span className="text-slate-400">Subreddit:</span>
-                    <span className="text-indigo-400 font-bold">r/{subredditData.subreddit}</span>
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 bg-slate-900/80 p-3.5 rounded-2xl border border-slate-800 text-xs">
+                  <div>
+                    <span className="text-slate-500 block text-[10px] uppercase font-bold">Subreddit</span>
+                    <span className="text-indigo-400 font-mono font-bold">r/{subreddit}</span>
                   </div>
-                  <div className="flex justify-between font-mono">
-                    <span className="text-slate-400">Sample Count:</span>
-                    <span className="text-slate-200">{vibeData.totalPosts} posts</span>
+                  <div>
+                    <span className="text-slate-500 block text-[10px] uppercase font-bold">Sample Count</span>
+                    <span className="text-slate-200 font-mono font-bold">{vibeSummary.totalPosts} posts</span>
                   </div>
-                  <div className="flex justify-between font-mono">
-                    <span className="text-slate-400">Pos / Neu / Neg:</span>
-                    <span className="text-slate-200">
-                      {vibeData.positivePercent}% / {vibeData.neutralPercent}% / {vibeData.negativePercent}%
+                  <div>
+                    <span className="text-slate-500 block text-[10px] uppercase font-bold">Overall Score</span>
+                    <span className="text-emerald-400 font-mono font-bold">
+                      {vibeSummary.avgScore > 0 ? `+${vibeSummary.avgScore}` : vibeSummary.avgScore}
+                    </span>
+                  </div>
+                  <div>
+                    <span className="text-slate-500 block text-[10px] uppercase font-bold">Pos / Neu / Neg</span>
+                    <span className="text-slate-200 font-mono font-bold">
+                      {vibeSummary.counts.positive} / {vibeSummary.counts.neutral} / {vibeSummary.counts.negative}
                     </span>
                   </div>
                 </div>
 
-                <div className="text-[11px] text-slate-500 pt-2 border-t border-slate-800">
-                  Data loaded directly from official Reddit JSON endpoint. No server storage or API keys required.
+                <div className="text-[11px] text-slate-500 border-t border-slate-800 pt-2">
+                  Unauthenticated public client-side fetch from <code className="text-slate-400 font-mono">api.reddit.com</code>.
                 </div>
               </div>
             </div>
 
-            {/* Posts List Section */}
+            {/* 3. Stat Cards */}
+            <StatCards vibeSummary={vibeSummary} />
+
+            {/* 4. Full Post List */}
             <div className="space-y-4">
               <div className="flex items-center justify-between">
                 <h3 className="text-xl font-bold text-white font-display">
                   Analyzed Posts Feed
                 </h3>
                 <span className="text-xs text-slate-400 font-mono">
-                  Showing {vibeData.analyzedPosts.length} posts
+                  Showing {posts.length} posts
                 </span>
               </div>
 
               <PostList
-                posts={vibeData.analyzedPosts}
-                counts={{
-                  total: vibeData.totalPosts,
-                  positive: vibeData.positiveCount,
-                  neutral: vibeData.neutralCount,
-                  negative: vibeData.negativeCount
-                }}
+                posts={posts}
+                counts={vibeSummary.counts}
               />
             </div>
           </section>
-        ) : null}
+        )}
       </main>
 
       {/* Footer */}
       <footer className="border-t border-slate-800/80 bg-slate-950 py-6 mt-16">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-slate-500">
-          <div className="flex items-center space-x-2">
-            <span>Subreddit Vibe Check &copy; {new Date().getFullYear()}</span>
-            <span>•</span>
-            <span>Built with React, Vite & Tailwind CSS</span>
+          <div>
+            Subreddit Vibe Check &copy; {new Date().getFullYear()} • Built with React, Vite & Tailwind CSS
           </div>
-          <div className="flex items-center space-x-4">
+          <div>
             <a
               href="https://www.reddit.com"
               target="_blank"
               rel="noopener noreferrer"
-              className="hover:text-slate-300 transition-colors flex items-center gap-1"
+              className="hover:text-slate-300 transition-colors inline-flex items-center gap-1"
             >
               <span>Reddit API</span>
               <ArrowUpRight className="w-3 h-3" />

@@ -1,7 +1,7 @@
 import React from 'react';
 import { AlertCircle, RefreshCw, HelpCircle, ArrowRight } from 'lucide-react';
 
-export function ErrorMessage({ error, onRetry, onSelectPreset }) {
+export function ErrorState({ errorMessage, onRetry, onSelectPreset }) {
   const suggestions = ['reactjs', 'aww', 'technology', 'askreddit'];
 
   return (
@@ -14,24 +14,24 @@ export function ErrorMessage({ error, onRetry, onSelectPreset }) {
 
       <div className="space-y-2">
         <h3 className="text-xl font-bold text-white font-display">
-          Oops! Couldn't check that subreddit
+          Unable to check subreddit
         </h3>
         <p className="text-sm text-slate-300 max-w-md mx-auto leading-relaxed">
-          {error || 'An unexpected error occurred while fetching posts.'}
+          {errorMessage || "Couldn't reach Reddit right now, try again in a moment."}
         </p>
       </div>
 
-      <div className="pt-2 flex flex-col sm:flex-row items-center justify-center gap-3">
+      <div className="pt-2 flex justify-center">
         <button
           onClick={onRetry}
-          className="w-full sm:w-auto px-6 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-white font-semibold text-sm flex items-center justify-center gap-2 border border-slate-700 transition-colors"
+          className="px-6 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-white font-semibold text-sm flex items-center gap-2 border border-slate-700 transition-colors"
         >
           <RefreshCw className="w-4 h-4" />
           <span>Try Again</span>
         </button>
       </div>
 
-      {/* Suggested subreddits */}
+      {/* Suggested Subreddits */}
       <div className="pt-4 border-t border-slate-800/80 space-y-2">
         <span className="text-xs text-slate-400 font-medium flex items-center justify-center gap-1">
           <HelpCircle className="w-3.5 h-3.5 text-indigo-400" /> Try a known active subreddit instead:
