@@ -171,6 +171,21 @@
   box-shadow: 0 5px 15px rgba(0, 0, 0, 0.5);
 }
 
+.teletype-paper::-webkit-scrollbar {
+  width: 8px;
+}
+.teletype-paper::-webkit-scrollbar-track {
+  background: #d8cfbc;
+  border-left: 1px solid #7A8578;
+}
+.teletype-paper::-webkit-scrollbar-thumb {
+  background: #574239;
+  border-radius: 4px;
+}
+.teletype-paper::-webkit-scrollbar-thumb:hover {
+  background: #E0692D;
+}
+
 .feed-hole {
   width: 12px;
   height: 12px;
