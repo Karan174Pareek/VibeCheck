@@ -1,6 +1,7 @@
 /**
  * Reddit API service for fetching public subreddit hot posts.
- * Uses multiple real endpoint fallbacks to handle CORS restrictions and browser anti-bot blocks.
+ * Uses local Vite proxy (/reddit-api/) in development and Vercel proxy rewrite in production
+ * to completely eliminate browser CORS restrictions and Cloudflare blocks.
  */
 
 export function sanitizeSubreddit(rawInput) {
@@ -22,16 +23,15 @@ export async function fetchHotPosts(subreddit) {
     throw new Error('Please enter a valid subreddit name.');
   }
 
+  // Endpoints: Local/Vercel proxy first, followed by direct endpoints and public proxies
   const rawRedditUrl = `https://www.reddit.com/r/${cleanSub}/hot.json?limit=50`;
-
-  // Array of direct endpoints and CORS proxy fallbacks
+  
   const endpoints = [
+    `/reddit-api/r/${cleanSub}/hot.json?limit=50`,
     `https://api.reddit.com/r/${cleanSub}/hot?limit=50`,
-    `https://www.reddit.com/r/${cleanSub}/hot.json?limit=50`,
-    `https://old.reddit.com/r/${cleanSub}/hot.json?limit=50`,
+    rawRedditUrl,
     `https://api.allorigins.win/raw?url=${encodeURIComponent(rawRedditUrl)}`,
-    `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(rawRedditUrl)}`,
-    `https://corsproxy.io/?${encodeURIComponent(rawRedditUrl)}`
+    `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(rawRedditUrl)}`
   ];
 
   let lastError = null;
@@ -49,7 +49,6 @@ export async function fetchHotPosts(subreddit) {
       }
 
       if (response.status === 403) {
-        // Skip 403 blocks from individual endpoints and try next fallback
         lastError = new Error(`This subreddit is private or unavailable.`);
         continue;
       }
@@ -64,7 +63,6 @@ export async function fetchHotPosts(subreddit) {
         let data;
         try {
           data = JSON.parse(text);
-          // Handle allorigins wrapped response
           if (data && data.contents) {
             data = JSON.parse(data.contents);
           }
@@ -72,8 +70,7 @@ export async function fetchHotPosts(subreddit) {
           continue;
         }
 
-        // Check if Reddit returned an error JSON payload
-        if (data.error) {
+        if (data && data.error) {
           if (data.error === 404 || data.reason === 'banned') {
             throw new Error(`r/${cleanSub} not found.`);
           }
@@ -86,7 +83,6 @@ export async function fetchHotPosts(subreddit) {
         const children = data?.data?.children;
 
         if (children && Array.isArray(children) && children.length > 0) {
-          // Map valid post data
           const posts = children
             .map((child) => child.data)
             .filter((post) => post && post.title)
