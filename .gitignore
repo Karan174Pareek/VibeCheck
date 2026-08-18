@@ -3,6 +3,9 @@ logs
 *.log
 npm-debug.log*
 
+# Vite cache
+.vite/
+
 # Node modules
 node_modules/
 dist/
