@@ -11,12 +11,10 @@ export function PostList({ posts, counts }) {
 
     let result = [...posts];
 
-    // Filter by sentiment tab
     if (filterTab !== 'all') {
       result = result.filter((p) => p.label === filterTab);
     }
 
-    // Filter by text search query
     if (searchQuery.trim()) {
       const q = searchQuery.toLowerCase().trim();
       result = result.filter(
@@ -41,11 +39,11 @@ export function PostList({ posts, counts }) {
   };
 
   return (
-    <div className="panel-module relative h-[540px] overflow-hidden bg-[#2d372d] w-full shadow-2xl">
-      <div className="label-plate z-20">Raw Sentiment Stream (50 Posts Ledger)</div>
+    <div className="panel-module relative h-[600px] overflow-hidden bg-[#2d372d] w-full shadow-2xl">
+      <div className="label-plate z-30">Raw Sentiment Stream (50 Posts Ledger)</div>
 
       {/* Toolbar: Filter Tabs & Search Box */}
-      <div className="absolute top-6 left-0 right-0 z-30 px-6 py-2 bg-[#182218] border-b border-[#574239] flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
+      <div className="absolute top-6 left-0 right-0 z-30 px-6 py-2.5 bg-[#182218] border-b border-[#574239] flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
         {/* Filter Tabs */}
         <div className="flex items-center gap-1 overflow-x-auto pb-1 sm:pb-0">
           <button
@@ -90,9 +88,9 @@ export function PostList({ posts, counts }) {
           </button>
         </div>
 
-        {/* Filter input */}
+        {/* Search Input */}
         <div className="relative flex items-center bg-[#051412] border border-[#574239] px-3 py-1 text-xs text-[#E0692D] w-full sm:w-64">
-          <Search className="w-3.5 h-3.5 mr-2 opacity-60" />
+          <Search className="w-3.5 h-3.5 mr-2 opacity-60 flex-shrink-0" />
           <input
             type="text"
             value={searchQuery}
@@ -103,22 +101,22 @@ export function PostList({ posts, counts }) {
         </div>
       </div>
 
-      {/* Hardware bezel for paper feed */}
-      <div className="absolute top-16 left-0 w-full h-6 bg-gradient-to-b from-[#071008] to-transparent z-10 border-b border-[#574239]" />
-      <div className="absolute bottom-0 left-0 w-full h-10 bg-gradient-to-t from-[#071008] to-transparent z-10 border-t border-[#574239] flex items-center justify-center">
+      {/* Hardware bezel overlays (pointer-events-none allows wheel scrolling to pass through) */}
+      <div className="absolute top-[68px] left-0 w-full h-6 bg-gradient-to-b from-[#071008] to-transparent z-20 border-b border-[#574239] pointer-events-none" />
+      <div className="absolute bottom-0 left-0 w-full h-10 bg-gradient-to-t from-[#071008] to-transparent z-20 border-t border-[#574239] flex items-center justify-center pointer-events-none">
         <div className="w-1/2 h-2 bg-[#0c160d] rounded-full shadow-inner opacity-50" />
       </div>
 
-      {/* The Parchment Paper Strip */}
-      <div className="absolute top-16 bottom-0 left-1/2 transform -translate-x-1/2 w-[94%] max-w-[950px] teletype-paper overflow-y-auto pt-10 pb-16 font-['JetBrains_Mono'] text-sm">
+      {/* Scrollable Parchment Paper Container */}
+      <div className="absolute top-[68px] bottom-0 left-1/2 transform -translate-x-1/2 w-[94%] max-w-[950px] teletype-paper overflow-y-auto pt-8 pb-16 font-['JetBrains_Mono'] text-sm z-10">
         {/* Sprocket feed holes */}
         <div className="absolute top-4 left-0 h-full w-4 flex flex-col gap-6 select-none pointer-events-none">
-          {[...Array(25)].map((_, i) => (
+          {[...Array(30)].map((_, i) => (
             <div key={i} className="feed-hole left" style={{ top: `${i * 30 + 10}px` }} />
           ))}
         </div>
         <div className="absolute top-4 right-0 h-full w-4 flex flex-col gap-6 select-none pointer-events-none">
-          {[...Array(25)].map((_, i) => (
+          {[...Array(30)].map((_, i) => (
             <div key={i} className="feed-hole right" style={{ top: `${i * 30 + 10}px` }} />
           ))}
         </div>
@@ -138,7 +136,7 @@ export function PostList({ posts, counts }) {
                 : 'text-[#574239] border-[#7A8578]';
 
               return (
-                <div key={post.id || idx} className="border-b border-[#7A8578] border-dashed pb-2 space-y-1">
+                <div key={post.id || idx} className="border-b border-[#7A8578] border-dashed pb-2.5 space-y-1">
                   <div className="flex flex-wrap items-baseline gap-2">
                     <span className="text-[#7c2e00] opacity-70 text-xs font-bold font-mono">
                       {getFormattedTime(post.created_utc, idx)}
@@ -165,7 +163,7 @@ export function PostList({ posts, counts }) {
                     {((post.positiveWords && post.positiveWords.length > 0) || (post.negativeWords && post.negativeWords.length > 0)) && (
                       <button
                         onClick={() => toggleExpand(post.id)}
-                        className="text-[11px] font-bold text-[#E0692D] hover:underline flex items-center gap-0.5"
+                        className="text-[11px] font-bold text-[#E0692D] hover:underline flex items-center gap-0.5 cursor-pointer"
                       >
                         <span>{isExpanded ? 'LESS' : 'DETAILS'}</span>
                         {isExpanded ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
