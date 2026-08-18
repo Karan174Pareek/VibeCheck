@@ -1,24 +1,22 @@
 import React, { useState, useMemo } from 'react';
-import { SentimentBadge } from './SentimentBadge';
-import { ExternalLink, Search, ArrowUpDown, MessageSquare, User, Clock, ChevronDown, ChevronUp } from 'lucide-react';
+import { ExternalLink, Search, ChevronDown, ChevronUp } from 'lucide-react';
 
 export function PostList({ posts, counts }) {
   const [filterTab, setFilterTab] = useState('all'); // 'all' | 'Positive' | 'Neutral' | 'Negative'
-  const [sortOption, setSortOption] = useState('rank'); // 'rank' | 'highest' | 'lowest' | 'upvotes' | 'comments'
   const [searchQuery, setSearchQuery] = useState('');
   const [expandedId, setExpandedId] = useState(null);
 
-  const filteredAndSortedPosts = useMemo(() => {
+  const filteredPosts = useMemo(() => {
     if (!posts) return [];
 
     let result = [...posts];
 
-    // 1. Tab filter
+    // Filter by sentiment tab
     if (filterTab !== 'all') {
       result = result.filter((p) => p.label === filterTab);
     }
 
-    // 2. Search query filter
+    // Filter by text search query
     if (searchQuery.trim()) {
       const q = searchQuery.toLowerCase().trim();
       result = result.filter(
@@ -26,270 +24,185 @@ export function PostList({ posts, counts }) {
       );
     }
 
-    // 3. Sort
-    result.sort((a, b) => {
-      if (sortOption === 'highest') {
-        return b.score - a.score || b.comparative - a.comparative;
-      }
-      if (sortOption === 'lowest') {
-        return a.score - b.score || a.comparative - b.comparative;
-      }
-      if (sortOption === 'upvotes') {
-        return b.ups - a.ups;
-      }
-      if (sortOption === 'comments') {
-        return b.num_comments - a.num_comments;
-      }
-      return 0; // default rank
-    });
-
     return result;
-  }, [posts, filterTab, sortOption, searchQuery]);
+  }, [posts, filterTab, searchQuery]);
 
   const toggleExpand = (id) => {
     setExpandedId(expandedId === id ? null : id);
   };
 
-  const getRelativeTime = (utcTimestamp) => {
-    if (!utcTimestamp) return '';
-    const now = Date.now() / 1000;
-    const diff = now - utcTimestamp;
-    if (diff < 3600) return `${Math.max(1, Math.floor(diff / 60))}m ago`;
-    if (diff < 86400) return `${Math.floor(diff / 3600)}h ago`;
-    return `${Math.floor(diff / 86400)}d ago`;
-  };
-
-  const renderHighlightedTitle = (post) => {
-    const posSet = new Set((post.positiveWords || []).map((w) => w.toLowerCase()));
-    const negSet = new Set((post.negativeWords || []).map((w) => w.toLowerCase()));
-
-    if (posSet.size === 0 && negSet.size === 0) return post.title;
-
-    const words = post.title.split(/(\s+)/);
-    return words.map((word, idx) => {
-      const clean = word.toLowerCase().replace(/[^a-z0-9]/g, '');
-      if (posSet.has(clean)) {
-        return (
-          <span key={idx} className="bg-emerald-500/20 text-emerald-300 font-semibold px-1 rounded border border-emerald-500/40">
-            {word}
-          </span>
-        );
-      }
-      if (negSet.has(clean)) {
-        return (
-          <span key={idx} className="bg-rose-500/20 text-rose-300 font-semibold px-1 rounded border border-rose-500/40">
-            {word}
-          </span>
-        );
-      }
-      return word;
-    });
+  const getFormattedTime = (utcTimestamp, idx) => {
+    const d = utcTimestamp ? new Date(utcTimestamp * 1000) : new Date();
+    const hours = String(d.getHours()).padStart(2, '0');
+    const minutes = String(d.getMinutes()).padStart(2, '0');
+    const seconds = String((d.getSeconds() + idx) % 60).padStart(2, '0');
+    const ms = String((idx * 137) % 999).padStart(3, '0');
+    return `[${hours}:${minutes}:${seconds}.${ms}]`;
   };
 
   return (
-    <div className="space-y-4">
-      {/* Filter and Sort Toolbar */}
-      <div className="glass-panel rounded-2xl p-4 border flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-4">
+    <div className="panel-module relative h-[540px] overflow-hidden bg-[#2d372d] w-full shadow-2xl">
+      <div className="label-plate z-20">Raw Sentiment Stream (50 Posts Ledger)</div>
+
+      {/* Toolbar: Filter Tabs & Search Box */}
+      <div className="absolute top-6 left-0 right-0 z-30 px-6 py-2 bg-[#182218] border-b border-[#574239] flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
         {/* Filter Tabs */}
-        <div className="flex items-center gap-1 overflow-x-auto pb-1 lg:pb-0 scrollbar-none">
+        <div className="flex items-center gap-1 overflow-x-auto pb-1 sm:pb-0">
           <button
             onClick={() => setFilterTab('all')}
-            className={`px-3 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap transition-all ${
+            className={`px-3 py-1 text-xs font-['IBM_Plex_Sans'] font-semibold uppercase tracking-wider transition-colors ${
               filterTab === 'all'
-                ? 'bg-indigo-600 text-white shadow-md'
-                : 'text-slate-400 hover:text-slate-200 hover:bg-slate-900'
+                ? 'bg-[#E0692D] text-[#0B2B26]'
+                : 'text-[#dec0b4] hover:bg-[#232c22]'
             }`}
           >
             All ({posts.length})
           </button>
-
           <button
             onClick={() => setFilterTab('Positive')}
-            className={`px-3 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap transition-all ${
+            className={`px-3 py-1 text-xs font-['IBM_Plex_Sans'] font-semibold uppercase tracking-wider transition-colors ${
               filterTab === 'Positive'
-                ? 'bg-emerald-600 text-white shadow-md'
-                : 'text-emerald-400/80 hover:text-emerald-300 hover:bg-emerald-500/10'
+                ? 'bg-[#b58a03] text-[#362700]'
+                : 'text-[#b58a03] hover:bg-[#232c22]'
             }`}
           >
             Positive ({counts?.positive || 0})
           </button>
-
           <button
             onClick={() => setFilterTab('Neutral')}
-            className={`px-3 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap transition-all ${
+            className={`px-3 py-1 text-xs font-['IBM_Plex_Sans'] font-semibold uppercase tracking-wider transition-colors ${
               filterTab === 'Neutral'
-                ? 'bg-slate-700 text-white shadow-md'
-                : 'text-slate-400 hover:text-slate-200 hover:bg-slate-900'
+                ? 'bg-[#7A8578] text-[#0c160d]'
+                : 'text-[#a68b80] hover:bg-[#232c22]'
             }`}
           >
             Neutral ({counts?.neutral || 0})
           </button>
-
           <button
             onClick={() => setFilterTab('Negative')}
-            className={`px-3 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap transition-all ${
+            className={`px-3 py-1 text-xs font-['IBM_Plex_Sans'] font-semibold uppercase tracking-wider transition-colors ${
               filterTab === 'Negative'
-                ? 'bg-rose-600 text-white shadow-md'
-                : 'text-rose-400/80 hover:text-rose-300 hover:bg-rose-500/10'
+                ? 'bg-[#e66b5c] text-[#410001]'
+                : 'text-[#e66b5c] hover:bg-[#232c22]'
             }`}
           >
             Negative ({counts?.negative || 0})
           </button>
         </div>
 
-        {/* In-list Search & Sort */}
-        <div className="flex items-center gap-3">
-          <div className="relative flex-1 sm:w-64">
-            <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
-            <input
-              type="text"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Filter post titles..."
-              className="w-full bg-slate-950/80 border border-slate-800 rounded-xl pl-9 pr-3 py-1.5 text-xs text-slate-100 placeholder-slate-500 focus:outline-none focus:border-indigo-500"
-            />
-          </div>
-
-          <div className="relative flex items-center bg-slate-950/80 border border-slate-800 rounded-xl px-3 py-1.5">
-            <ArrowUpDown className="w-3.5 h-3.5 text-slate-400 mr-2" />
-            <select
-              value={sortOption}
-              onChange={(e) => setSortOption(e.target.value)}
-              className="bg-transparent text-xs font-semibold text-slate-200 focus:outline-none cursor-pointer"
-            >
-              <option value="rank" className="bg-slate-900">Hot Rank</option>
-              <option value="highest" className="bg-slate-900">Highest Sentiment</option>
-              <option value="lowest" className="bg-slate-900">Lowest Sentiment</option>
-              <option value="upvotes" className="bg-slate-900">Most Upvotes</option>
-              <option value="comments" className="bg-slate-900">Most Comments</option>
-            </select>
-          </div>
+        {/* Filter input */}
+        <div className="relative flex items-center bg-[#051412] border border-[#574239] px-3 py-1 text-xs text-[#E0692D] w-full sm:w-64">
+          <Search className="w-3.5 h-3.5 mr-2 opacity-60" />
+          <input
+            type="text"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            placeholder="Filter title stream..."
+            className="bg-transparent border-none outline-none text-[#E0692D] w-full placeholder-[#574239] font-['JetBrains_Mono']"
+          />
         </div>
       </div>
 
-      {/* Posts Feed List */}
-      {filteredAndSortedPosts.length > 0 ? (
-        <div className="space-y-3">
-          {filteredAndSortedPosts.map((post, idx) => {
-            const isExpanded = expandedId === post.id;
-            const hasWords = (post.positiveWords && post.positiveWords.length > 0) || (post.negativeWords && post.negativeWords.length > 0);
+      {/* Hardware bezel for paper feed */}
+      <div className="absolute top-16 left-0 w-full h-6 bg-gradient-to-b from-[#071008] to-transparent z-10 border-b border-[#574239]" />
+      <div className="absolute bottom-0 left-0 w-full h-10 bg-gradient-to-t from-[#071008] to-transparent z-10 border-t border-[#574239] flex items-center justify-center">
+        <div className="w-1/2 h-2 bg-[#0c160d] rounded-full shadow-inner opacity-50" />
+      </div>
 
-            return (
-              <div key={post.id || idx} className="glass-panel glass-panel-hover rounded-2xl p-4 sm:p-5 border transition-all">
-                <div className="flex items-start justify-between gap-3">
-                  <div className="flex items-start gap-3 flex-1 min-w-0">
-                    <span className="text-xs font-mono text-slate-500 pt-0.5 font-bold w-6 text-right select-none">
-                      #{idx + 1}
+      {/* The Parchment Paper Strip */}
+      <div className="absolute top-16 bottom-0 left-1/2 transform -translate-x-1/2 w-[94%] max-w-[950px] teletype-paper overflow-y-auto pt-10 pb-16 font-['JetBrains_Mono'] text-sm">
+        {/* Sprocket feed holes */}
+        <div className="absolute top-4 left-0 h-full w-4 flex flex-col gap-6 select-none pointer-events-none">
+          {[...Array(25)].map((_, i) => (
+            <div key={i} className="feed-hole left" style={{ top: `${i * 30 + 10}px` }} />
+          ))}
+        </div>
+        <div className="absolute top-4 right-0 h-full w-4 flex flex-col gap-6 select-none pointer-events-none">
+          {[...Array(25)].map((_, i) => (
+            <div key={i} className="feed-hole right" style={{ top: `${i * 30 + 10}px` }} />
+          ))}
+        </div>
+
+        {/* Stream Entries */}
+        {filteredPosts.length > 0 ? (
+          <div className="flex flex-col gap-3 pl-4 pr-4">
+            {filteredPosts.map((post, idx) => {
+              const isExpanded = expandedId === post.id;
+              const isPos = post.label === 'Positive';
+              const isNeg = post.label === 'Negative';
+
+              const stampClass = isPos
+                ? 'text-[#b58a03] border-[#b58a03]'
+                : isNeg
+                ? 'text-[#e66b5c] border-[#e66b5c]'
+                : 'text-[#574239] border-[#7A8578]';
+
+              return (
+                <div key={post.id || idx} className="border-b border-[#7A8578] border-dashed pb-2 space-y-1">
+                  <div className="flex flex-wrap items-baseline gap-2">
+                    <span className="text-[#7c2e00] opacity-70 text-xs font-bold font-mono">
+                      {getFormattedTime(post.created_utc, idx)}
                     </span>
-
-                    <div className="space-y-2 flex-1 min-w-0">
-                      <h3 className="text-sm sm:text-base font-semibold text-slate-100 leading-snug hover:text-indigo-300 transition-colors">
-                        <a href={post.permalink} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1.5 group">
-                          <span>{isExpanded ? renderHighlightedTitle(post) : post.title}</span>
-                          <ExternalLink className="w-3.5 h-3.5 opacity-0 group-hover:opacity-100 text-indigo-400 transition-opacity flex-shrink-0" />
-                        </a>
-                      </h3>
-
-                      <div className="flex flex-wrap items-center gap-2 text-xs text-slate-400">
-                        <span className="font-mono font-medium text-slate-300 bg-slate-900 px-2 py-0.5 rounded border border-slate-800">
-                          ↑ {post.ups >= 1000 ? `${(post.ups / 1000).toFixed(1)}k` : post.ups}
-                        </span>
-
-                        <span className="flex items-center gap-1 font-mono text-slate-400 bg-slate-900 px-2 py-0.5 rounded border border-slate-800">
-                          <MessageSquare className="w-3 h-3" />
-                          {post.num_comments >= 1000 ? `${(post.num_comments / 1000).toFixed(1)}k` : post.num_comments}
-                        </span>
-
-                        <span className="flex items-center gap-1 text-slate-400">
-                          <User className="w-3 h-3 text-slate-500" />
-                          u/{post.author}
-                        </span>
-
-                        {post.created_utc && (
-                          <span className="flex items-center gap-1 text-slate-500">
-                            <Clock className="w-3 h-3" />
-                            {getRelativeTime(post.created_utc)}
-                          </span>
-                        )}
-
-                        {post.link_flair_text && (
-                          <span className="px-2 py-0.5 text-[10px] rounded bg-slate-800 text-slate-300 border border-slate-700 truncate max-w-[140px]">
-                            {post.link_flair_text}
-                          </span>
-                        )}
-
-                        {post.over_18 && (
-                          <span className="px-1.5 py-0.5 text-[10px] font-bold rounded bg-rose-500/20 text-rose-400 border border-rose-500/40 uppercase">
-                            NSFW
-                          </span>
-                        )}
-                      </div>
-                    </div>
+                    <span className={`stamp text-xs font-bold font-mono ${stampClass}`}>
+                      {post.label.toUpperCase()}
+                    </span>
+                    <a
+                      href={post.permalink}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="font-medium hover:underline text-[#0c160d] inline-flex items-center gap-1 group flex-1 min-w-[200px]"
+                    >
+                      <span>"{post.title}"</span>
+                      <ExternalLink className="w-3.5 h-3.5 opacity-0 group-hover:opacity-100 text-[#E0692D] transition-opacity flex-shrink-0" />
+                    </a>
                   </div>
 
-                  <div className="flex flex-col items-end gap-1.5 flex-shrink-0">
-                    <div className="flex items-center gap-1.5">
-                      <SentimentBadge label={post.label} />
-                      <span className={`font-mono text-xs font-extrabold px-2 py-1 rounded-lg bg-slate-900 border border-slate-800 ${
-                        post.score > 0 ? 'text-emerald-400' : post.score < 0 ? 'text-rose-400' : 'text-slate-400'
-                      }`}>
-                        {post.score > 0 ? `+${post.score}` : post.score}
-                      </span>
-                    </div>
+                  <div className="flex items-center justify-between text-xs text-[#574239] font-mono pt-0.5">
+                    <span>
+                      UPVOTES: {post.ups} | SCORE: {post.score > 0 ? `+${post.score}` : post.score} | COMP: {post.comparative}
+                    </span>
 
-                    {hasWords && (
+                    {((post.positiveWords && post.positiveWords.length > 0) || (post.negativeWords && post.negativeWords.length > 0)) && (
                       <button
                         onClick={() => toggleExpand(post.id)}
-                        className="text-[11px] text-slate-400 hover:text-slate-200 flex items-center gap-1 font-medium pt-1"
+                        className="text-[11px] font-bold text-[#E0692D] hover:underline flex items-center gap-0.5"
                       >
-                        <span>{isExpanded ? 'Hide' : 'Analysis'}</span>
+                        <span>{isExpanded ? 'LESS' : 'DETAILS'}</span>
                         {isExpanded ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
                       </button>
                     )}
                   </div>
-                </div>
 
-                {isExpanded && (
-                  <div className="mt-3 pt-3 border-t border-slate-800/80 text-xs space-y-2 bg-slate-950/60 p-3 rounded-xl">
-                    <div className="flex items-center justify-between text-slate-400 font-mono">
-                      <span>Comparative Score: <strong className="text-slate-200">{post.comparative}</strong></span>
-                      <span>AFINN Metric</span>
-                    </div>
-
-                    <div className="flex flex-wrap gap-2 pt-1">
+                  {isExpanded && (
+                    <div className="mt-2 p-2.5 bg-[#e2dbca] border border-[#7A8578] rounded text-xs space-y-1 text-[#0c160d]">
                       {post.positiveWords && post.positiveWords.length > 0 && (
-                        <div className="flex items-center gap-1 text-emerald-400">
-                          <span className="font-semibold text-slate-400">Positive triggers:</span>
-                          {post.positiveWords.map((w, i) => (
-                            <span key={i} className="bg-emerald-500/10 border border-emerald-500/30 px-1.5 py-0.5 rounded font-mono">
-                              +{w}
-                            </span>
-                          ))}
+                        <div className="text-[#b58a03] font-bold">
+                          + POSITIVE TRIGGERS: {post.positiveWords.join(', ')}
                         </div>
                       )}
-
                       {post.negativeWords && post.negativeWords.length > 0 && (
-                        <div className="flex items-center gap-1 text-rose-400">
-                          <span className="font-semibold text-slate-400">Negative triggers:</span>
-                          {post.negativeWords.map((w, i) => (
-                            <span key={i} className="bg-rose-500/10 border border-rose-500/30 px-1.5 py-0.5 rounded font-mono">
-                              -{w}
-                            </span>
-                          ))}
+                        <div className="text-[#e66b5c] font-bold">
+                          - NEGATIVE TRIGGERS: {post.negativeWords.join(', ')}
                         </div>
                       )}
+                      <div className="text-[11px] text-[#574239] italic">
+                        AUTHOR: u/{post.author} • COMMENTS: {post.num_comments}
+                      </div>
                     </div>
-                  </div>
-                )}
-              </div>
-            );
-          })}
-        </div>
-      ) : (
-        <div className="glass-panel rounded-2xl p-12 text-center text-slate-400">
-          No matching posts found.
-        </div>
-      )}
+                  )}
+                </div>
+              );
+            })}
+
+            {/* Typewriter Cursor */}
+            <div className="mt-2 text-[#E0692D] blinking-cursor inline-block w-2 h-4 bg-current" />
+          </div>
+        ) : (
+          <div className="p-8 text-center text-[#574239] font-mono">
+            No matching posts found in current stream.
+          </div>
+        )}
+      </div>
     </div>
   );
 }

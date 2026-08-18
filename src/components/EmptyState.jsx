@@ -1,24 +1,21 @@
 import React from 'react';
-import { Sparkles, ArrowUp } from 'lucide-react';
 
 export function EmptyState({ onSelectPreset }) {
   return (
-    <div className="w-full max-w-xl mx-auto glass-panel rounded-3xl p-10 border border-slate-800 text-center space-y-4">
-      <div className="w-12 h-12 rounded-2xl bg-indigo-500/10 border border-indigo-500/30 flex items-center justify-center mx-auto text-indigo-400">
-        <Sparkles className="w-6 h-6" />
+    <div className="panel-module p-8 text-center space-y-4 max-w-xl mx-auto shadow-2xl">
+      <div className="label-plate">Console Standby</div>
+
+      <div className="w-12 h-12 rounded-full bg-[#182218] border border-[#ffb596] flex items-center justify-center mx-auto text-[#ffb596] mt-4">
+        <span className="material-symbols-outlined text-2xl">radar</span>
       </div>
 
-      <h3 className="text-lg font-bold text-white font-display">
-        Ready for a Vibe Check
+      <h3 className="font-['Oswald'] text-xl text-[#f1c043] uppercase tracking-wider">
+        READY FOR TELEMETRY ACQUISITION
       </h3>
 
-      <p className="text-xs sm:text-sm text-slate-400 leading-relaxed max-w-sm mx-auto">
-        Type any subreddit name in the search bar above or pick a preset to analyze hot post sentiment in real-time.
+      <p className="font-['JetBrains_Mono'] text-xs text-[#dec0b4] max-w-sm mx-auto leading-relaxed">
+        Enter a subreddit in Target Acquisition above or select a preset frequency to commence real-time sentiment telemetry scan.
       </p>
-
-      <div className="pt-2 flex justify-center text-indigo-400 animate-bounce">
-        <ArrowUp className="w-5 h-5" />
-      </div>
     </div>
   );
 }

@@ -1,6 +1,5 @@
 import React from 'react';
-import { ThumbsUp, ThumbsDown, Layers, ExternalLink } from 'lucide-react';
-import { SentimentBadge } from './SentimentBadge';
+import { ExternalLink } from 'lucide-react';
 
 export function StatCards({ vibeSummary }) {
   if (!vibeSummary) return null;
@@ -8,93 +7,103 @@ export function StatCards({ vibeSummary }) {
   const { mostPositivePost, mostNegativePost, totalPosts } = vibeSummary;
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+    <div className="grid grid-cols-1 md:grid-cols-3 gap-6 w-full">
       {/* Most Positive Post */}
-      <div className="glass-panel rounded-2xl p-4 border border-emerald-500/30 flex flex-col justify-between space-y-3 relative overflow-hidden group">
-        <div className="flex items-center justify-between">
-          <span className="text-xs font-semibold text-emerald-400 flex items-center gap-1.5">
-            <ThumbsUp className="w-3.5 h-3.5" /> Most Positive Title
+      <div className="panel-module p-5 flex flex-col justify-between space-y-3 relative overflow-hidden group">
+        <div className="label-plate">Vector Alpha Highlight</div>
+
+        <div className="flex items-center justify-between mt-2">
+          <span className="stamp font-['Oswald'] text-lg font-bold text-[#b58a03] border-[#b58a03]">
+            MOST POSITIVE
           </span>
           {mostPositivePost && (
-            <span className="font-mono text-xs font-bold text-emerald-400">
-              Score: +{mostPositivePost.score}
+            <span className="font-['JetBrains_Mono'] text-xs font-bold text-[#b58a03]">
+              SCORE: +{mostPositivePost.score}
             </span>
           )}
         </div>
 
         {mostPositivePost ? (
           <>
-            <h4 className="text-xs sm:text-sm font-semibold text-slate-100 line-clamp-2 leading-snug group-hover:text-emerald-300 transition-colors">
-              {mostPositivePost.title}
+            <h4 className="text-xs sm:text-sm font-['JetBrains_Mono'] font-medium text-[#dae6d6] line-clamp-2 leading-relaxed group-hover:text-[#ffb596] transition-colors">
+              "{mostPositivePost.title}"
             </h4>
-            <div className="flex items-center justify-between text-xs text-slate-400 pt-1 border-t border-slate-800/80">
-              <span className="font-mono">↑ {mostPositivePost.ups.toLocaleString()} upvotes</span>
+            <div className="flex items-center justify-between text-xs font-['JetBrains_Mono'] text-[#a68b80] pt-2 border-t border-[#2d372d]">
+              <span>UPVOTES: {mostPositivePost.ups}</span>
               <a
                 href={mostPositivePost.permalink}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex items-center gap-1 text-emerald-400 hover:underline font-medium"
+                className="flex items-center gap-1 text-[#b58a03] hover:underline font-bold"
               >
-                Reddit <ExternalLink className="w-3 h-3" />
+                REDDIT <ExternalLink className="w-3 h-3" />
               </a>
             </div>
           </>
         ) : (
-          <p className="text-xs text-slate-500 italic">No strongly positive titles found in sample.</p>
+          <p className="text-xs text-[#574239] italic font-['JetBrains_Mono']">
+            No strongly positive titles detected in sample.
+          </p>
         )}
       </div>
 
       {/* Most Negative Post */}
-      <div className="glass-panel rounded-2xl p-4 border border-rose-500/30 flex flex-col justify-between space-y-3 relative overflow-hidden group">
-        <div className="flex items-center justify-between">
-          <span className="text-xs font-semibold text-rose-400 flex items-center gap-1.5">
-            <ThumbsDown className="w-3.5 h-3.5" /> Most Negative Title
+      <div className="panel-module p-5 flex flex-col justify-between space-y-3 relative overflow-hidden group">
+        <div className="label-plate">Vector Gamma Highlight</div>
+
+        <div className="flex items-center justify-between mt-2">
+          <span className="stamp font-['Oswald'] text-lg font-bold text-[#e66b5c] border-[#e66b5c]" style={{ transform: 'rotate(-2deg)' }}>
+            MOST NEGATIVE
           </span>
           {mostNegativePost && (
-            <span className="font-mono text-xs font-bold text-rose-400">
-              Score: {mostNegativePost.score}
+            <span className="font-['JetBrains_Mono'] text-xs font-bold text-[#e66b5c]">
+              SCORE: {mostNegativePost.score}
             </span>
           )}
         </div>
 
         {mostNegativePost ? (
           <>
-            <h4 className="text-xs sm:text-sm font-semibold text-slate-100 line-clamp-2 leading-snug group-hover:text-rose-300 transition-colors">
-              {mostNegativePost.title}
+            <h4 className="text-xs sm:text-sm font-['JetBrains_Mono'] font-medium text-[#dae6d6] line-clamp-2 leading-relaxed group-hover:text-[#e66b5c] transition-colors">
+              "{mostNegativePost.title}"
             </h4>
-            <div className="flex items-center justify-between text-xs text-slate-400 pt-1 border-t border-slate-800/80">
-              <span className="font-mono">↑ {mostNegativePost.ups.toLocaleString()} upvotes</span>
+            <div className="flex items-center justify-between text-xs font-['JetBrains_Mono'] text-[#a68b80] pt-2 border-t border-[#2d372d]">
+              <span>UPVOTES: {mostNegativePost.ups}</span>
               <a
                 href={mostNegativePost.permalink}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex items-center gap-1 text-rose-400 hover:underline font-medium"
+                className="flex items-center gap-1 text-[#e66b5c] hover:underline font-bold"
               >
-                Reddit <ExternalLink className="w-3 h-3" />
+                REDDIT <ExternalLink className="w-3 h-3" />
               </a>
             </div>
           </>
         ) : (
-          <p className="text-xs text-slate-500 italic">No strongly negative titles found in sample.</p>
+          <p className="text-xs text-[#574239] italic font-['JetBrains_Mono']">
+            No strongly negative titles detected in sample.
+          </p>
         )}
       </div>
 
-      {/* Total Posts Card */}
-      <div className="glass-panel rounded-2xl p-4 border border-indigo-500/30 flex flex-col justify-between space-y-3">
-        <div className="flex items-center justify-between">
-          <span className="text-xs font-semibold text-indigo-400 flex items-center gap-1.5">
-            <Layers className="w-3.5 h-3.5" /> Total Posts Analyzed
+      {/* Total Sample Stats */}
+      <div className="panel-module p-5 flex flex-col justify-between space-y-3">
+        <div className="label-plate">Sample Telemetry</div>
+
+        <div className="flex items-center justify-between mt-2">
+          <span className="font-['IBM_Plex_Sans'] text-xs font-semibold text-[#dec0b4] tracking-widest uppercase">
+            TOTAL SAMPLE SIZE
           </span>
-          <span className="text-xs font-mono font-bold text-indigo-300">Hot Feed</span>
+          <span className="font-['JetBrains_Mono'] text-xs text-[#f1c043]">HOT FEED</span>
         </div>
 
-        <div className="flex items-baseline justify-between">
-          <span className="text-3xl font-extrabold text-white font-mono">{totalPosts}</span>
-          <span className="text-xs text-slate-400">client-side scored</span>
+        <div className="mechanical-input px-4 py-2 flex items-baseline justify-between">
+          <span className="text-3xl font-extrabold font-['Oswald'] text-[#ffb596]">{totalPosts}</span>
+          <span className="text-xs text-[#a68b80] font-['JetBrains_Mono']">POSTS SCORED</span>
         </div>
 
-        <div className="text-[11px] text-slate-500 pt-1 border-t border-slate-800/80">
-          Scored via AFINN-165 Sentiment Engine
+        <div className="text-[11px] text-[#a68b80] pt-1 border-t border-[#2d372d] font-['JetBrains_Mono']">
+          ENGINE: AFINN-165 Sentiment Engine
         </div>
       </div>
     </div>

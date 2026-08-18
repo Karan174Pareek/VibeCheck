@@ -1,13 +1,12 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Header } from './components/Header';
-import { Sidebar } from './components/Sidebar';
 import { SearchBar } from './components/SearchBar';
-import { SystemStatus } from './components/SystemStatus';
-import { AnalogGauge } from './components/AnalogGauge';
-import { VectorTally } from './components/VectorTally';
-import { TeletypeStream } from './components/TeletypeStream';
+import { VibeSummaryCard } from './components/VibeSummaryCard';
+import { StatCards } from './components/StatCards';
+import { PostList } from './components/PostList';
 import { LoadingState } from './components/LoadingState';
 import { ErrorState } from './components/ErrorState';
+import { EmptyState } from './components/EmptyState';
 import { fetchHotPosts } from './api/reddit';
 import { analyzeTitles } from './utils/sentiment';
 import { computeVibe } from './utils/aggregate';
@@ -54,27 +53,17 @@ export function App() {
 
   return (
     <div className="min-h-screen bg-[#0B2B26] text-[#dae6d6] font-['JetBrains_Mono'] antialiased">
-      {/* Top Telemetry Header */}
+      {/* Header */}
       <Header />
 
-      {/* Operator Side Console */}
-      <Sidebar onNewScan={() => handleSearch('reactjs')} />
-
-      {/* Main Content Canvas */}
-      <main className="pt-24 pb-8 px-4 md:pl-72 md:pr-8 min-h-screen flex flex-col gap-8 max-w-[1600px] mx-auto">
-        {/* Top Row: Input Acquisition & System Status */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          <SearchBar
-            onSearch={handleSearch}
-            isLoading={status === 'loading'}
-            initialValue={subreddit}
-          />
-          <SystemStatus
-            isLoading={status === 'loading'}
-            isError={status === 'error'}
-            isSuccess={status === 'success'}
-          />
-        </div>
+      {/* Main Single-Page Canvas */}
+      <main className="max-w-[1400px] mx-auto px-4 sm:px-8 pt-24 pb-12 space-y-8">
+        {/* Full-width SearchBar (Target Acquisition) */}
+        <SearchBar
+          onSearch={handleSearch}
+          isLoading={status === 'loading'}
+          initialValue={subreddit}
+        />
 
         {/* View Switching based on State */}
         {status === 'loading' && <LoadingState />}
@@ -87,17 +76,25 @@ export function App() {
           />
         )}
 
-        {status === 'success' && vibeSummary && (
-          <>
-            {/* Middle Row: Analog Gauge Dial & Vector Tally */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-              <AnalogGauge vibeSummary={vibeSummary} />
-              <VectorTally counts={vibeSummary.counts} />
-            </div>
+        {status === 'idle' && <EmptyState onSelectPreset={handleSearch} />}
 
-            {/* Bottom Row: Raw Teletype Sentiment Stream */}
-            <TeletypeStream posts={posts} />
-          </>
+        {status === 'success' && vibeSummary && (
+          <div className="space-y-8 animate-fade-in">
+            {/* 1. Hero Vibe Centerpiece Result */}
+            <VibeSummaryCard
+              subreddit={subreddit}
+              vibeSummary={vibeSummary}
+            />
+
+            {/* 2. Real Telemetry Stat Cards */}
+            <StatCards vibeSummary={vibeSummary} />
+
+            {/* 3. 50-Post Raw Stream Ledger View */}
+            <PostList
+              posts={posts}
+              counts={vibeSummary.counts}
+            />
+          </div>
         )}
       </main>
     </div>

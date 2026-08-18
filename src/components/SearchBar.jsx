@@ -19,7 +19,7 @@ export function SearchBar({ onSearch, isLoading, initialValue = 'reactjs' }) {
   };
 
   return (
-    <div className="panel-module p-6 lg:col-span-2 flex flex-col justify-center">
+    <div className="panel-module p-6 w-full flex flex-col justify-center shadow-2xl">
       <div className="label-plate">Target Acquisition</div>
 
       <form onSubmit={handleSubmit} className="flex flex-col sm:flex-row items-stretch sm:items-end gap-4 mt-4">
@@ -34,7 +34,7 @@ export function SearchBar({ onSearch, isLoading, initialValue = 'reactjs' }) {
               type="text"
               value={inputVal}
               onChange={(e) => setInputVal(e.target.value)}
-              placeholder="MachineLearning"
+              placeholder="reactjs"
               disabled={isLoading}
               className="bg-transparent border-none outline-none text-[#E0692D] w-full font-['JetBrains_Mono'] font-bold placeholder-[#574239]"
               autoCapitalize="none"
