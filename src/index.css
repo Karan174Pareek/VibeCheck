@@ -40,6 +40,22 @@
   text-transform: uppercase;
 }
 
+/* Custom Stream Scrollbar */
+.custom-stream-scrollbar::-webkit-scrollbar {
+  width: 10px;
+}
+.custom-stream-scrollbar::-webkit-scrollbar-track {
+  background: #141e15;
+  border-left: 1px solid #574239;
+}
+.custom-stream-scrollbar::-webkit-scrollbar-thumb {
+  background: #E0692D;
+  border-radius: 4px;
+}
+.custom-stream-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: #ffb596;
+}
+
 /* Gauge Styles */
 .gauge-container {
   position: relative;
@@ -165,25 +181,9 @@
   background-color: #F0E9D8;
   color: #0c160d;
   position: relative;
-  padding: 20px 30px;
   border-left: 1px solid #7A8578;
   border-right: 1px solid #7A8578;
   box-shadow: 0 5px 15px rgba(0, 0, 0, 0.5);
-}
-
-.teletype-paper::-webkit-scrollbar {
-  width: 8px;
-}
-.teletype-paper::-webkit-scrollbar-track {
-  background: #d8cfbc;
-  border-left: 1px solid #7A8578;
-}
-.teletype-paper::-webkit-scrollbar-thumb {
-  background: #574239;
-  border-radius: 4px;
-}
-.teletype-paper::-webkit-scrollbar-thumb:hover {
-  background: #E0692D;
 }
 
 .feed-hole {
